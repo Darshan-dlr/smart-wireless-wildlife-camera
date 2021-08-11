@@ -1,0 +1,62 @@
+from gpiozero import MotionSensor, Button, LED
+from picamera import PiCamera
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+import datetime
+import smtplib
+import time
+from time import sleep
+
+pir = MotionSensor(20)
+camera = PiCamera()
+led = LED(17)
+button = Button(16)
+
+#replace the next three lines with your credentials
+from_email_addr = 'Druvadlr16@gmail.com'
+from_email_password = '7760090880'
+to_email_addr = 'Darshan1ga17ec029@gmail.com'
+
+#Create Alarm State by default it off.
+Alarm_state = False
+
+while True:
+
+    if button.is_pressed:
+        Alarm_state = True
+        print('Alarm ON')
+
+    if Alarm_state == True:
+        led.on()
+        sleep(1)
+        if pir.motion_detected:
+            print("Motion Detected")
+            led.off()
+
+            #capture images
+            Captured1 = '/home/pi/Desktop/image' + datetime.datetime.now().strftime('%Y-%m-%d%H:%M:%S') + '.png'
+            camera.rotation = 180
+            camera.capture(Captured1)
+            print("Image Captured")
+
+            #Message
+            msg = MIMEMultipart()
+            msg[ 'Subject'] = 'Image captured by SWWC'
+            msg['From'] = druvadlr16@gmail
+            msg['To'] = darshan1ga17ec029@gmail.com
+
+            #Attach the files 
+            File = open(Captured1, 'rb')
+            img1 = MIMEImage(File.read())
+            File.close()
+            msg.attach(img1)
+            print("attach successful")
+
+            #send Mail
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(druvadlr16@gmail.com,7760090880 )
+            server.sendmail(druvadlr16@gmail, darshan1ga17ec029@gmail.com, msg.as_string())
+            server.quit()
+            print('Email sent')
+            Alarm_state = False
